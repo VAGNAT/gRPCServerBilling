@@ -1,0 +1,16 @@
+{
+  "person": [    
+    {
+      "name": "boris",
+      "rating": 5000
+    },
+    {
+      "name": "maria",
+      "rating": 1000
+    },
+    {
+      "name": "oleg",
+      "rating": 800
+    }
+  ]
+}
