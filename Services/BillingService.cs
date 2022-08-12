@@ -28,7 +28,7 @@ namespace Billing.Services
         }
 
         public override async Task ListUsers(None request, IServerStreamWriter<UserProfile> responseStream, ServerCallContext context)
-        {            
+        {
             foreach (var user in _people)
             {
                 await responseStream.WriteAsync(user.Profile);
@@ -74,19 +74,8 @@ namespace Billing.Services
 
         public override async Task<Coin> LongestHistoryCoin(None request, ServerCallContext context)
         {
-            Coin coin = new Coin();
-            int maxLength = default;
-            foreach (KeyValuePair<Coin, Person> item in _coins)
-            {
-                int count = item.Key.History.Split('\n').Length;
-                if (count > maxLength)
-                {
-                    coin = item.Key;
-                    maxLength = count;
-                }
-            }
             _logger.LogInformation("Longest history coin query");
-            return coin;
+            return _coins.OrderByDescending(c => c.Key.History.Split('\n').Length).FirstOrDefault().Key;
         }
 
         private void MoveCoinsUsers(int amountCoins, Person srsUser, Person dstUser)
@@ -106,6 +95,9 @@ namespace Billing.Services
         {
             decimal usersProcessed = default, coinsDist = default, amountCoins = default, quantityCoins = default;
             decimal coefficient = inputAmountCoins / _people.Sum(x => x.Rating);
+
+            //создаем список тех кому монеты будем распределять по рейтингу
+            //даем по одной монете тому у кого низкий рейтинг и по факту не должен был получить монеты
             List<Person> peopleDist = new List<Person>();
             foreach (Person person in _people)
             {
@@ -124,6 +116,7 @@ namespace Billing.Services
                 coinsDist += amountCoins;
             }
 
+            //алгоритм Кэхэна
             coefficient = (inputAmountCoins - quantityCoins) / peopleDist.Sum(x => x.Rating);
             usersProcessed = default;
             coinsDist = default;
